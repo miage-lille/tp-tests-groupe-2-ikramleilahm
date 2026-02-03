@@ -5,7 +5,6 @@ import { ChangeSeats } from 'src/webinars/use-cases/change-seats';
 import { User } from 'src/users/entities/user.entity';
 import { testUser } from 'src/users/tests/user-seeds';
 
-
 describe('Feature : Change seats', () => {
   let webinarRepository: InMemoryWebinarRepository;
   let useCase: ChangeSeats;
@@ -32,14 +31,27 @@ describe('Feature : Change seats', () => {
       webinarId: 'webinar-id',
       seats: 200,
     };
-    
+
     it('should change the number of seats for a webinar', async () => {
-     // Vérification de la règle métier, condition testée...
-     await useCase.execute(payload);
-      const updatedWebinar = await webinarRepository.findById(payload.webinarId);
+      // Vérification de la règle métier, condition testée...
+      await useCase.execute(payload);
+      const updatedWebinar = await webinarRepository.findById(
+        payload.webinarId,
+      );
       expect(updatedWebinar?.props.seats).toBe(200);
     });
-
   });
 
+  describe('Scenario: webinar does not exist', () => {
+    const payload = {
+      user: testUser.alice,
+      webinarId: 'webinar-id-2',
+      seats: 200,
+    };
+
+    it('should fail', async () => {
+      const result = useCase.execute(payload);
+      await expect(result).rejects.toThrow('Webinar not found');
+    });
+  });
 });
