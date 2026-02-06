@@ -2,7 +2,6 @@
 import { InMemoryWebinarRepository } from 'src/webinars/adapters/webinar-repository.in-memory';
 import { Webinar } from 'src/webinars/entities/webinar.entity';
 import { ChangeSeats } from 'src/webinars/use-cases/change-seats';
-import { User } from 'src/users/entities/user.entity';
 import { testUser } from 'src/users/tests/user-seeds';
 
 describe('Feature : Change seats', () => {
@@ -23,6 +22,24 @@ describe('Feature : Change seats', () => {
     useCase = new ChangeSeats(webinarRepository);
   });
 
+  async function whenUserChangeSeatsWith(payload: {
+    user: (typeof testUser)[keyof typeof testUser];
+    webinarId: string;
+    seats: number;
+  }) {
+    return useCase.execute(payload);
+  }
+
+  async function thenUpdatedWebinarSeatsShouldBe(seats: number) {
+    const updatedWebinar = await webinarRepository.findById('webinar-id');
+    expect(updatedWebinar?.props.seats).toBe(seats);
+  }
+
+  function expectWebinarToRemainUnchanged() {
+    const storedWebinar = webinarRepository.findByIdSync('webinar-id');
+    expect(storedWebinar?.props.seats).toBe(100);
+  }
+
   // Initialisation de nos tests, boilerplates...
   describe('Scenario: Happy path', () => {
     // Code commun à notre scénario : payload...
@@ -34,11 +51,8 @@ describe('Feature : Change seats', () => {
 
     it('should change the number of seats for a webinar', async () => {
       // Vérification de la règle métier, condition testée...
-      await useCase.execute(payload);
-      const updatedWebinar = await webinarRepository.findById(
-        payload.webinarId,
-      );
-      expect(updatedWebinar?.props.seats).toBe(200);
+      await whenUserChangeSeatsWith(payload);
+      await thenUpdatedWebinarSeatsShouldBe(200);
     });
   });
 
@@ -50,7 +64,7 @@ describe('Feature : Change seats', () => {
     };
 
     it('should fail', async () => {
-      const result = useCase.execute(payload);
+      const result = whenUserChangeSeatsWith(payload);
       await expect(result).rejects.toThrow('Webinar not found');
     });
   });
@@ -63,10 +77,11 @@ describe('Feature : Change seats', () => {
     };
 
     it('should fail', async () => {
-      const result = useCase.execute(payload);
+      const result = whenUserChangeSeatsWith(payload);
       await expect(result).rejects.toThrow(
         'User is not allowed to update this webinar',
       );
+      expectWebinarToRemainUnchanged();
     });
   });
 
@@ -78,10 +93,11 @@ describe('Feature : Change seats', () => {
     };
 
     it('should fail', async () => {
-      const result = useCase.execute(payload);
+      const result = whenUserChangeSeatsWith(payload);
       await expect(result).rejects.toThrow(
         'You cannot reduce the number of seats',
       );
+      expectWebinarToRemainUnchanged();
     });
   });
 
@@ -93,10 +109,11 @@ describe('Feature : Change seats', () => {
     };
 
     it('should fail', async () => {
-      const result = useCase.execute(payload);
+      const result = whenUserChangeSeatsWith(payload);
       await expect(result).rejects.toThrow(
         'Webinar must have at most 1000 seats',
       );
+      expectWebinarToRemainUnchanged();
     });
   });
 });
