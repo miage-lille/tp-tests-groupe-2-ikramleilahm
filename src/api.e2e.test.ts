@@ -19,6 +19,41 @@ describe('Webinar Routes E2E', () => {
     await fixture.stop();
   });
 
+  it('should organize a webinar', async () => {
+    // ARRANGE
+    const prisma = fixture.getPrismaClient();
+    const server = fixture.getServer();
+    const startDate = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    // ACT
+    const response = await supertest(server)
+      .post('/webinars')
+      .send({
+        userId: 'test-user',
+        title: 'Webinar Test',
+        seats: 10,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      })
+      .expect(201);
+
+    // ASSERT
+    expect(response.body).toEqual({ id: 'id-1' });
+
+    const createdWebinar = await prisma.webinar.findUnique({
+      where: { id: 'id-1' },
+    });
+    expect(createdWebinar).toEqual({
+      id: 'id-1',
+      organizerId: 'test-user',
+      title: 'Webinar Test',
+      startDate,
+      endDate,
+      seats: 10,
+    });
+  });
+
   it('should update webinar seats', async () => {
     // ARRANGE
     const prisma = fixture.getPrismaClient();
