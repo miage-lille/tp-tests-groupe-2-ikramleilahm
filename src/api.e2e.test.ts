@@ -49,4 +49,46 @@ describe('Webinar Routes E2E', () => {
     });
     expect(updatedWebinar?.seats).toBe(30);
   });
+
+  it('should return 404 when webinar does not exist', async () => {
+    // ARRANGE
+    const server = fixture.getServer();
+
+    // ACT
+    const response = await supertest(server)
+      .post('/webinars/unknown-webinar/seats')
+      .send({ seats: '30' })
+      .expect(404);
+
+    // ASSERT
+    expect(response.body).toEqual({ error: 'Webinar not found' });
+  });
+
+  it('should return 401 when user is not the organizer', async () => {
+    // ARRANGE
+    const prisma = fixture.getPrismaClient();
+    const server = fixture.getServer();
+
+    const webinar = await prisma.webinar.create({
+      data: {
+        id: 'test-webinar-not-organizer',
+        title: 'Webinar Test',
+        seats: 10,
+        startDate: new Date(),
+        endDate: new Date(),
+        organizerId: 'another-user',
+      },
+    });
+
+    // ACT
+    const response = await supertest(server)
+      .post(`/webinars/${webinar.id}/seats`)
+      .send({ seats: '30' })
+      .expect(401);
+
+    // ASSERT
+    expect(response.body).toEqual({
+      error: 'User is not allowed to update this webinar',
+    });
+  });
 });
