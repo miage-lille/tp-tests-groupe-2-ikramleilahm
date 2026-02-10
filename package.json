@@ -13,7 +13,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@testcontainers/postgresql": "^10.16.0",
+    "@testcontainers/postgresql": "^11.11.0",
     "@types/http-errors": "^2.0.4",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.1",
