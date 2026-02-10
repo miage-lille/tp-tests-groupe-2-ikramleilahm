@@ -1,13 +1,15 @@
-version: '3.3'
-
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:15  # Version stable 15 
     ports:
-      - 5432:5432
+      - "5432:5432"  # Port standard PostgreSQL
     volumes:
-      - ~/apps/tp_postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data  # Volume nommé 
     environment:
       - POSTGRES_PASSWORD=tp_password
       - POSTGRES_USER=tp_user
       - POSTGRES_DB=tp_db
+    restart: unless-stopped  # Redémarre automatiquement si crash
+
+volumes:
+  postgres_data:  # Déclaration du volume
